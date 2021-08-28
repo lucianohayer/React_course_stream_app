@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import { GOOGLE_OAUTH_ID } from '../properties/oauthId';
+import { connect } from 'react-redux';
+import { signIn, signOut } from '../actions';
 
 class GoogleAuth extends Component {
-	state = { isSignedIn: null };
 	auth = null;
 
-	onSignIn = () => {
+	onSignInClick = () => {
 		this.auth.signIn();
 	};
 
-	onSignOut = () => {
+	onSignOutClick = () => {
 		this.auth.signOut();
 	};
 
@@ -22,31 +23,35 @@ class GoogleAuth extends Component {
 				})
 				.then(() => {
 					this.auth = window.gapi.auth2.getAuthInstance();
-					this.setState({
-						isSignedIn: this.auth.isSignedIn.get(),
-					});
-					this.auth.isSignedIn.listen(() => this.onAuthChange());
+					this.onAuthChange(this.auth.isSignedIn.get());
+					this.auth.isSignedIn.listen((isSignedIn) =>
+						this.onAuthChange(isSignedIn)
+					);
 				});
 		});
 	}
 
-	onAuthChange() {
-		this.setState({ isSignedIn: this.auth.isSignedIn.get() });
+	onAuthChange(isSignedIn) {
+		if (isSignedIn === true) {
+			this.props.signIn();
+		} else {
+			this.props.signOut();
+		}
 	}
 
 	renderAuthButton() {
-		if (this.state.isSignedIn === null) {
+		if (this.props.isSignedIn === null) {
 			return null;
-		} else if (this.state.isSignedIn) {
+		} else if (this.props.isSignedIn) {
 			return (
-				<button className="ui red google button" onClick={this.onSignOut}>
+				<button className="ui red google button" onClick={this.onSignOutClick}>
 					<i className="google icon" />
 					Sign out
 				</button>
 			);
 		} else {
 			return (
-				<button className="ui red google button" onClick={this.onSignIn}>
+				<button className="ui red google button" onClick={this.onSignInClick}>
 					<i className="google icon" />
 					Sign in with Google
 				</button>
@@ -59,4 +64,8 @@ class GoogleAuth extends Component {
 	}
 }
 
-export default GoogleAuth;
+const mapStateToProps = (state) => {
+	return { isSignedIn: state.auth.isSignedIn };
+};
+
+export default connect(mapStateToProps, { signIn, signOut })(GoogleAuth);
