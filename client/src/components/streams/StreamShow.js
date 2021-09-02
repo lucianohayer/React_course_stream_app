@@ -22,7 +22,9 @@ class StreamShow extends Component {
 	}
 
 	componentWillMount() {
-		this.player.destroy();
+		if (this.player) {
+			this.player.destroy();
+		}
 	}
 
 	buildPlayer() {
